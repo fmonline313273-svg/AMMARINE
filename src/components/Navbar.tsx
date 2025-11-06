@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 
 const Navbar = () => {
@@ -24,9 +25,21 @@ const Navbar = () => {
             <Link to="/" className="text-foreground hover:text-primary transition-colors">
               Home
             </Link>
-            <Link to="/products/automation" className="text-foreground hover:text-primary transition-colors">
-              Products
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex items-center gap-1 text-foreground hover:text-primary transition-colors">
+                  Products <ChevronDown className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem asChild>
+                  <Link to="/products/automation">Automation</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/products/electronics">Electronics</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Link to="/about" className="text-foreground hover:text-primary transition-colors">
               About Us
             </Link>
@@ -57,13 +70,23 @@ const Navbar = () => {
             >
               Home
             </Link>
-            <Link
-              to="/products/automation"
-              className="block text-foreground hover:text-primary transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Products
-            </Link>
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground px-1">Products</div>
+              <Link
+                to="/products/automation"
+                className="block text-foreground hover:text-primary transition-colors pl-3"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Automation
+              </Link>
+              <Link
+                to="/products/electronics"
+                className="block text-foreground hover:text-primary transition-colors pl-3"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Electronics
+              </Link>
+            </div>
             <Link
               to="/about"
               className="block text-foreground hover:text-primary transition-colors"
