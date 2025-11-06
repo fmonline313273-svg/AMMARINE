@@ -1,36 +1,24 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs' };
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { username, password } = await request.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
+    const { username, password } = body;
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      const token = (globalThis.crypto && 'randomUUID' in globalThis.crypto)
-        ? (globalThis.crypto as Crypto).randomUUID()
-        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      return new Response(JSON.stringify({ success: true, token, message: 'Login successful' }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      return res.json({ success: true, token, message: 'Login successful' });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid username or password' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(401).json({ error: 'Invalid username or password' });
   } catch (e) {
-    return new Response(JSON.stringify({ error: 'Login failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: 'Login failed' });
   }
 }
