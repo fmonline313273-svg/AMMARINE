@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,95 +8,65 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Search } from "lucide-react";
 
-// Sample product data
-const sampleProducts = {
-  automation: [
-    {
-      id: "plc-001",
-      name: "Siemens S7-1200 PLC",
-      partNumber: "6ES7214-1AG40-0XB0",
-      manufacturer: "Siemens",
-      category: "PLC",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "hmi-001",
-      name: "Siemens HMI Basic Panel",
-      partNumber: "6AV2123-2GB03-0AX0",
-      manufacturer: "Siemens",
-      category: "HMI",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "servo-001",
-      name: "ABB Servo Drive",
-      partNumber: "3HAC028357-001",
-      manufacturer: "ABB",
-      category: "Servo Drive",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "io-001",
-      name: "Schneider I/O Module",
-      partNumber: "TM3DI8",
-      manufacturer: "Schneider Electric",
-      category: "I/O Module",
-      image: "/placeholder.svg"
-    }
-  ],
-  electronics: [
-    {
-      id: "acb-001",
-      name: "ABB Air Circuit Breaker",
-      partNumber: "E2B-1600",
-      manufacturer: "ABB",
-      category: "ACB",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "mccb-001",
-      name: "Schneider MCCB",
-      partNumber: "NSX250F",
-      manufacturer: "Schneider Electric",
-      category: "MCCB",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "contactor-001",
-      name: "Siemens Contactor",
-      partNumber: "3RT2026-1AP00",
-      manufacturer: "Siemens",
-      category: "Contactor",
-      image: "/placeholder.svg"
-    },
-    {
-      id: "relay-001",
-      name: "ABB Overload Relay",
-      partNumber: "TA25DU-1.6",
-      manufacturer: "ABB",
-      category: "Overload Relay",
-      image: "/placeholder.svg"
-    }
-  ]
-};
-
 const Products = () => {
   const { category } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedManufacturer, setSelectedManufacturer] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const products = category === "electronics" ? sampleProducts.electronics : sampleProducts.automation;
-  const categoryTitle = category === "electronics" ? "Electronics & Switch Gears" : "Marine & Industrial Automation";
+  useEffect(() => {
+    let ignore = false;
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/admin/products", { cache: "no-store" });
+        const data = await res.json();
+        if (!ignore) setAllProducts(Array.isArray(data.products) ? data.products : []);
+      } catch (e) {
+        if (!ignore) setError("Failed to load products");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    load();
+    return () => { ignore = true };
+  }, []);
 
-  const manufacturers = Array.from(new Set(products.map(p => p.manufacturer)));
-  const subcategories = Array.from(new Set(products.map(p => p.category)));
+  // Map route category to API category
+  const apiCategory = useMemo(() => {
+    if (!category) return "automation";
+    const c = category.toLowerCase();
+    if (c === "electronics" || c === "electronic") return "electronic";
+    return "automation";
+  }, [category]);
+
+  const products = useMemo(() => {
+    return allProducts
+      .filter((p) => (p?.category || "").toLowerCase() === apiCategory)
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        partNumber: p.partNumber || "",
+        manufacturer: p.manufacturer || "",
+        subcategory: p.subcategory || "",
+        image: (Array.isArray(p.images) && p.images[0]) || p.image || "/placeholder.svg",
+      }));
+  }, [allProducts, apiCategory]);
+
+  const categoryTitle = apiCategory === "electronic" ? "Electronics & Switch Gears" : "Marine & Industrial Automation";
+
+  const manufacturers = Array.from(new Set(products.map(p => p.manufacturer).filter(Boolean)));
+  const subcategories = Array.from(new Set(products.map(p => p.subcategory).filter(Boolean)));
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.partNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesManufacturer = !selectedManufacturer || product.manufacturer === selectedManufacturer;
-    const matchesSubcategory = !selectedSubcategory || product.category === selectedSubcategory;
+    const matchesSubcategory = !selectedSubcategory || product.subcategory === selectedSubcategory;
     return matchesSearch && matchesManufacturer && matchesSubcategory;
   });
 
@@ -190,7 +160,7 @@ const Products = () => {
             <div className="md:col-span-3">
               <div className="mb-6">
                 <p className="text-muted-foreground">
-                  Showing {filteredProducts.length} products
+                  {loading ? "Loading products..." : error ? error : `Showing ${filteredProducts.length} products`}
                 </p>
               </div>
 
@@ -209,9 +179,11 @@ const Products = () => {
                       <p className="text-sm text-muted-foreground mb-1">
                         Part #: {product.partNumber}
                       </p>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {product.manufacturer}
-                      </p>
+                      {product.manufacturer && (
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {product.manufacturer}
+                        </p>
+                      )}
                       <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                         <Link to={`/product/${product.id}`}>View Details</Link>
                       </Button>
