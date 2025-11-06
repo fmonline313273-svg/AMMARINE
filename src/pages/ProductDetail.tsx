@@ -11,6 +11,7 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -39,6 +40,11 @@ const ProductDetail = () => {
     if (Array.isArray(product.images) && product.images.length) return product.images;
     if (product.image) return [product.image];
     return ["/placeholder.svg"];
+  }, [product]);
+
+  useEffect(() => {
+    // Reset selected image when product or images change
+    setSelectedIndex(0);
   }, [product]);
 
   const categoryFromId = useMemo(() => {
@@ -80,20 +86,28 @@ const ProductDetail = () => {
             <div>
               <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
                 <img
-                  src={images[0]}
+                  src={images[selectedIndex]}
                   alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {images.map((img: string, idx: number) => (
-                  <div key={idx} className="aspect-square bg-muted rounded-lg cursor-pointer hover:ring-2 ring-primary">
+                  <button
+                    type="button"
+                    key={idx}
+                    onClick={() => setSelectedIndex(idx)}
+                    className={`aspect-square rounded-lg overflow-hidden cursor-pointer border ${
+                      selectedIndex === idx ? 'ring-2 ring-primary' : 'hover:ring-2 ring-primary/50'
+                    }`}
+                    aria-label={`Show image ${idx + 1}`}
+                  >
                     <img
                       src={img}
                       alt={`${product.name} thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
+                      className="w-full h-full object-cover"
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
