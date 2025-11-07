@@ -175,7 +175,7 @@ const ProductDetail = () => {
             <p className="text-muted-foreground">Product not found.</p>
           )}
           {!loading && product && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+          <div className="grid grid-cols-2 gap-12 mb-12">
             {/* Left Column - Images */}
             <div>
               <button
