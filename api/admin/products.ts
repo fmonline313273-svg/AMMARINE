@@ -79,6 +79,8 @@ export default async function handler(req: any, res: any) {
       const name = fields['name'];
       const description = fields['description'];
       const link = fields['link'];
+      const partNumber = fields['partNumber'] || '';
+      const condition = fields['condition'] || '';
 
       if (!category || !name || !description || !link || !files?.length) {
         return res.status(400).json({ error: 'All fields and at least one image are required' });
@@ -109,6 +111,8 @@ export default async function handler(req: any, res: any) {
         name,
         description,
         link,
+        partNumber,
+        condition,
         images: imageUrls, // ✅ array instead of single image
         createdAt: new Date().toISOString(),
       };
@@ -117,6 +121,105 @@ export default async function handler(req: any, res: any) {
       await writeProducts(data);
 
       return res.json({ success: true, product: newProduct, message: 'Product added successfully' });
+    }
+
+    if (req.method === 'PUT') {
+      const contentType = (req.headers['content-type'] as string) || '';
+      const data = await readProducts();
+
+      // helper to find product index
+      const findIndex = (id: string) => data.products.findIndex((p: any) => p.id === id);
+
+      if (contentType.includes('multipart/form-data')) {
+        const { fields, files } = await parseMultipart(req);
+        const id = fields['id'];
+        if (!id) return res.status(400).json({ error: 'Product ID is required' });
+        const idx = findIndex(id);
+        if (idx === -1) return res.status(404).json({ error: 'Product not found' });
+
+        const prod = { ...data.products[idx] };
+        const name = fields['name'];
+        const description = fields['description'];
+        const partNumber = fields['partNumber'];
+        const condition = fields['condition'];
+        const category = fields['category'];
+        const link = fields['link'];
+        const keepImagesRaw = fields['keepImages'] || '[]';
+        let keepImages: string[] = [];
+        try { keepImages = JSON.parse(keepImagesRaw) } catch {}
+
+        if (typeof name === 'string') prod.name = name;
+        if (typeof description === 'string') prod.description = description;
+        if (typeof partNumber === 'string') prod.partNumber = partNumber;
+        if (typeof condition === 'string') prod.condition = condition;
+        if (typeof category === 'string') prod.category = category;
+        if (typeof link === 'string') prod.link = link;
+
+        // upload new files (all received files are treated as new images)
+        const timestamp = Date.now();
+        const uploadedUrls: string[] = [];
+        for (const file of files) {
+          try {
+            const filename = `${timestamp}-edit-${(file.filename || 'upload').replace(/\s+/g, '-')}`;
+            const result = await put(`products/${filename}`, file.buffer, {
+              access: 'public',
+              contentType: file.mimetype || 'application/octet-stream',
+            });
+            uploadedUrls.push(result.url);
+          } catch {
+            const base64 = file.buffer.toString('base64');
+            uploadedUrls.push(`data:${file.mimetype || 'application/octet-stream'};base64,${base64}`);
+          }
+        }
+
+        // delete removed images
+        const existingUrls: string[] = Array.isArray(prod.images)
+          ? prod.images.filter((u: any) => typeof u === 'string')
+          : (typeof prod.image === 'string' ? [prod.image] : []);
+        const toDelete = existingUrls.filter((u) => !keepImages.includes(u));
+        for (const url of toDelete) {
+          if (typeof url === 'string' && url.includes('vercel-storage.com')) {
+            try { await del(url) } catch {}
+          }
+        }
+
+        const finalImages = [...keepImages, ...uploadedUrls];
+        prod.images = finalImages;
+        if (finalImages.length) prod.image = finalImages[0];
+
+        data.products[idx] = prod;
+        await writeProducts(data);
+        return res.json({ success: true, product: prod });
+      }
+
+      // JSON path (no file uploads)
+      try {
+        const body = await (async () => {
+          let raw = '';
+          await new Promise<void>((resolve) => {
+            req.on('data', (chunk: any) => { raw += chunk })
+            req.on('end', () => resolve())
+          })
+          return JSON.parse(raw || '{}');
+        })();
+        const { id, name, description, partNumber, condition, category, link, images } = body || {};
+        if (!id) return res.status(400).json({ error: 'Product ID is required' });
+        const idx = findIndex(id);
+        if (idx === -1) return res.status(404).json({ error: 'Product not found' });
+        const prod = { ...data.products[idx] };
+        if (typeof name === 'string') prod.name = name;
+        if (typeof description === 'string') prod.description = description;
+        if (typeof partNumber === 'string') prod.partNumber = partNumber;
+        if (typeof condition === 'string') prod.condition = condition;
+        if (typeof category === 'string') prod.category = category;
+        if (typeof link === 'string') prod.link = link;
+        if (Array.isArray(images)) { prod.images = images; if (images.length) prod.image = images[0]; }
+        data.products[idx] = prod;
+        await writeProducts(data);
+        return res.json({ success: true, product: prod });
+      } catch (err: any) {
+        return res.status(400).json({ error: 'Invalid JSON body', details: String(err?.message || err) })
+      }
     }
 
     if (req.method === 'DELETE') {
