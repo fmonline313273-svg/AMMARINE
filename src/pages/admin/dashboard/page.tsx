@@ -540,6 +540,7 @@ export default function AdminDashboard() {
                                             fd.append('partNumber', p)
                                             fd.append('description', d)
                                             fd.append('keepImages', JSON.stringify(editData.images))
+                                            fd.append('condition', (editData as any).condition || product.condition || '')
                                             newEditFiles.forEach(f => fd.append('newImages', f))
                                             const res = await fetch('/api/admin/products', { method: 'PUT', body: fd })
                                             if (res.ok) {
