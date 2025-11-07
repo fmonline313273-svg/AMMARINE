@@ -525,13 +525,20 @@ export default function AdminDashboard() {
                                       </div>
                                       <div className="flex gap-2">
                                         <Button size="sm" onClick={async () => {
+                                          const n = (editData.name || '').trim();
+                                          const p = (editData.partNumber || '').trim();
+                                          const d = (editData.description || '').trim();
+                                          if (!n || !p || !d) {
+                                            setMessage({ type: 'error', text: 'Please fill name, part number, and description before saving.' });
+                                            return;
+                                          }
                                           const hasNew = newEditFiles.length > 0
                                           if (hasNew) {
                                             const fd = new FormData()
                                             fd.append('id', product.id)
-                                            fd.append('name', editData.name)
-                                            fd.append('partNumber', editData.partNumber)
-                                            fd.append('description', editData.description)
+                                            fd.append('name', n)
+                                            fd.append('partNumber', p)
+                                            fd.append('description', d)
                                             fd.append('keepImages', JSON.stringify(editData.images))
                                             newEditFiles.forEach(f => fd.append('newImages', f))
                                             const res = await fetch('/api/admin/products', { method: 'PUT', body: fd })
@@ -544,7 +551,7 @@ export default function AdminDashboard() {
                                               setMessage({ type: 'error', text: 'Failed to update product' })
                                             }
                                           } else {
-                                            const res = await fetch('/api/admin/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: product.id, name: editData.name, partNumber: editData.partNumber, description: editData.description, images: editData.images, condition: (editData as any).condition || product.condition }) })
+                                            const res = await fetch('/api/admin/products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: product.id, name: n, partNumber: p, description: d, images: editData.images, condition: (editData as any).condition || product.condition }) })
                                             if (res.ok) {
                                               setMessage({ type: 'success', text: 'Product updated' })
                                               setEditingId(null)
