@@ -236,8 +236,8 @@ const ProductDetail = () => {
               <h1 className="text-4xl font-bold mb-4 text-foreground">{product.name}</h1>
               <div className="space-y-2 mb-6">
                 <p className="text-lg">
-                  <span className="text-muted-foreground">Part Number:</span>{" "}
-                  <span className="font-semibold text-foreground">{product.partNumber || '-'}</span>
+                  <h2 className="text-xl font-bold mb-3 text-foreground">Description</h2>
+                <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p>
                 </p>
               </div>
 
