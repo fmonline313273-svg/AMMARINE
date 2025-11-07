@@ -38,7 +38,7 @@ const Navbar = () => {
           {/* Logo */}
 <Link to="/" className="flex items-center space-x-2">
   <img
-    src="/logo.png"
+    src="/C:\Users\Firoz\Videos\AMMARINE-main\AMMARINE-main\public\logo.png"
     alt="A M Marine Logo"
     className="h-10 w-auto" // Adjust size as needed
   />
