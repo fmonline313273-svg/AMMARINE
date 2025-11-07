@@ -40,7 +40,7 @@ const Navbar = () => {
   <img
     src="/C:\Users\Firoz\Videos\AMMARINE-main\AMMARINE-main\public\logo.png"
     alt="A M Marine Logo"
-    className="h-10 w-auto" // Adjust size as needed
+    className="h-auto w-auto" // Adjust size as needed
   />
 </Link>
 
