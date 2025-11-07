@@ -22,10 +22,34 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic will be implemented when connecting to backend
+    const msgLines = [
+      `Name: ${formData.fullName}`,
+      `Company: ${formData.companyName}`,
+      `Email: ${formData.email}`,
+      `Phone: ${formData.phone}`,
+      `Inquiry: ${formData.inquiryType}`,
+      "",
+      formData.message,
+    ];
+    const message = msgLines.join("\n");
+
+    // Open WhatsApp chat in a new tab
+    const whatsappNumber = "919724313273"; // country code + number
+    const waUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+
+    // Trigger email client with prefilled subject/body
+    const mailTo = "ammrineautomation@gmail.com";
+    const subject = `New Inquiry from ${formData.fullName} (${formData.inquiryType || "General"})`;
+    const mailtoUrl = `mailto:${mailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    // Use setTimeout to avoid some browsers blocking second navigation
+    setTimeout(() => {
+      window.location.href = mailtoUrl;
+    }, 300);
+
     toast({
-      title: "Thank you for your inquiry!",
-      description: "Our team will contact you shortly.",
+      title: "Message prepared",
+      description: "WhatsApp opened and email draft created.",
     });
     setFormData({
       fullName: "",
@@ -33,7 +57,7 @@ const Contact = () => {
       email: "",
       phone: "",
       inquiryType: "",
-      message: ""
+      message: "",
     });
   };
 
@@ -101,10 +125,10 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold mb-1 text-foreground">Email</h3>
                         <a
-                          href="mailto:a.m.marineautomation@gmail.com"
+                          href="mailto:ammrineautomation@gmail.com"
                           className="text-sm text-muted-foreground hover:text-primary break-all"
                         >
-                          a.m.marineautomation@gmail.com
+                          ammrineautomation@gmail.com
                         </a>
                       </div>
                     </div>
