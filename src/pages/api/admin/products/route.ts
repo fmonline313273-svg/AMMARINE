@@ -16,6 +16,92 @@ async function readProducts(): Promise<{ products: any[] }> {
   return res.json()
 }
 
+// PUT - Edit existing product (update metadata and optionally images order)
+export async function PUT(request: NextRequest) {
+  try {
+    const contentType = request.headers.get('content-type') || ''
+    const data = await readProducts()
+
+    // Helper to find product by id
+    const findIndex = (id: string) => data.products.findIndex((p: any) => p.id === id)
+
+    if (contentType.includes('multipart/form-data')) {
+      const form = await request.formData()
+      const id = form.get('id') as string
+      if (!id) return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+      const idx = findIndex(id)
+      if (idx === -1) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+
+      const prod = { ...data.products[idx] }
+      const name = form.get('name') as string | null
+      const description = form.get('description') as string | null
+      const partNumber = form.get('partNumber') as string | null
+      const category = form.get('category') as string | null
+      const link = form.get('link') as string | null
+      const condition = form.get('condition') as string | null
+      const keepImagesRaw = (form.get('keepImages') as string | null) || '[]'
+      let keepImages: string[] = []
+      try { keepImages = JSON.parse(keepImagesRaw) } catch {}
+      const newFiles = (form.getAll('newImages') as File[]).filter(Boolean)
+
+      if (typeof name === 'string') prod.name = name
+      if (typeof description === 'string') prod.description = description
+      if (typeof partNumber === 'string') prod.partNumber = partNumber
+      if (typeof category === 'string') prod.category = category
+      if (typeof link === 'string') prod.link = link
+      if (typeof condition === 'string') (prod as any).condition = condition
+
+      // Upload new files
+      const timestamp = Date.now()
+      const uploadedUrls: string[] = []
+      for (let i = 0; i < newFiles.length; i++) {
+        const file = newFiles[i]
+        const filename = `${timestamp}-edit-${i}-${file.name.replace(/\s+/g, '-')}`
+        const { url } = await put(`products/${filename}`, file, { access: 'public', contentType: file.type })
+        uploadedUrls.push(url)
+    }
+
+      // Compute deletions: existing - keepImages
+      const existingUrls: string[] = Array.isArray(prod.images) ? prod.images.filter((u: any) => typeof u === 'string') : (typeof prod.image === 'string' ? [prod.image] : [])
+      const toDelete = existingUrls.filter((u) => !keepImages.includes(u))
+      for (const url of toDelete) {
+        if (url.includes('vercel-storage.com')) {
+          try { await del(url) } catch (err) { console.error('Error deleting blob image:', err) }
+        }
+      }
+
+      // New images array
+      const finalImages = [...keepImages, ...uploadedUrls]
+      prod.images = finalImages
+      prod.image = finalImages[0] || undefined
+
+      data.products[idx] = prod
+      await writeProducts(data)
+      return NextResponse.json({ success: true, product: prod })
+    }
+
+    // JSON body fallback (no file uploads)
+    const body = await request.json()
+    const { id, name, description, partNumber, category, link, images, condition } = body || {}
+    if (!id) return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+    const idx = findIndex(id)
+    if (idx === -1) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    const prod = { ...data.products[idx] }
+    if (typeof name === 'string') prod.name = name
+    if (typeof description === 'string') prod.description = description
+    if (typeof partNumber === 'string') prod.partNumber = partNumber
+    if (typeof category === 'string') prod.category = category
+    if (typeof link === 'string') prod.link = link
+    if (Array.isArray(images)) { prod.images = images; prod.image = images[0] || undefined }
+    data.products[idx] = prod
+    await writeProducts(data)
+    return NextResponse.json({ success: true, product: prod })
+  } catch (error) {
+    console.error('Error updating product:', error)
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  }
+}
+
 // Write products JSON to Vercel Blob
 async function writeProducts(data: any) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
@@ -38,7 +124,7 @@ export async function GET() {
   }
 }
 
-// POST - Add new product
+// POST - Add new product (supports optional multiple images)
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -46,22 +132,30 @@ export async function POST(request: NextRequest) {
     const name = formData.get('name') as string
     const description = formData.get('description') as string
     const link = formData.get('link') as string
-    const imageFile = formData.get('image') as File
+    const partNumber = (formData.get('partNumber') as string) || ''
+    const condition = (formData.get('condition') as string) || ''
+    // Multiple images can be sent under the key "images"
+    const imageFiles = (formData.getAll('images') as File[]).filter(Boolean)
 
-    if (!category || !name || !description || !link || !imageFile) {
+    if (!category || !name || !description || !link) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Required fields: category, name, description, link' },
         { status: 400 }
       )
     }
 
-    // Upload image to Vercel Blob
+    // Upload images to Vercel Blob (if any)
     const timestamp = Date.now()
-    const filename = `${timestamp}-${imageFile.name.replace(/\s+/g, '-')}`
-    const { url } = await put(`products/${filename}`, imageFile, {
-      access: 'public',
-      contentType: imageFile.type,
-    })
+    const uploadedUrls: string[] = []
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i]
+      const filename = `${timestamp}-${i}-${file.name.replace(/\s+/g, '-')}`
+      const { url } = await put(`products/${filename}`, file, {
+        access: 'public',
+        contentType: file.type,
+      })
+      uploadedUrls.push(url)
+    }
 
     // Add product to database
     const data = await readProducts()
@@ -71,7 +165,11 @@ export async function POST(request: NextRequest) {
       name,
       description,
       link,
-      image: url,
+      partNumber,
+      condition,
+      images: uploadedUrls,
+      // Backward compatibility: keep single image field as the first image if available
+      image: uploadedUrls[0] || undefined,
       createdAt: new Date().toISOString(),
     }
 
@@ -117,13 +215,22 @@ export async function DELETE(request: NextRequest) {
 
     const product = data.products[productIndex]
 
-    // Delete image from Vercel Blob if it's a blob URL
+    // Delete all images from Vercel Blob if their URLs are blob URLs
     try {
-      if (typeof product.image === 'string' && product.image.includes('vercel-storage.com')) {
-        await del(product.image)
+      const urls: string[] = []
+      if (typeof product.image === 'string') urls.push(product.image)
+      if (Array.isArray(product.images)) urls.push(...product.images.filter((u: any) => typeof u === 'string'))
+      for (const url of urls) {
+        if (url.includes('vercel-storage.com')) {
+          try {
+            await del(url)
+          } catch (err) {
+            console.error('Error deleting blob image:', err)
+          }
+        }
       }
     } catch (err) {
-      console.error('Error deleting blob image:', err)
+      console.error('Error during blob deletions:', err)
     }
 
     // Remove product from database
