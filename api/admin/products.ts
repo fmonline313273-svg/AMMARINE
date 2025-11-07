@@ -5,7 +5,7 @@ import Busboy from 'busboy';
 
 const PRODUCTS_BLOB_KEY = 'data/products.json';
 
-// Simple in-memory fallback for local dev when Blob is not configured
+// Memory fallback for local
 type ProductsData = { products: any[] };
 const MEM_KEY = '__MEM_PRODUCTS__';
 function getMem(): ProductsData {
@@ -40,21 +40,19 @@ async function writeProducts(data: any) {
   }
 }
 
-function parseMultipart(req: any): Promise<{ fields: Record<string, string>; file?: { buffer: Buffer; filename: string; mimetype: string } }> {
+// ✅ UPDATED: handle multiple file uploads
+function parseMultipart(req: any): Promise<{ fields: Record<string, string>; files: { buffer: Buffer; filename: string; mimetype: string }[] }> {
   return new Promise((resolve, reject) => {
     const bb = Busboy({ headers: req.headers });
     const fields: Record<string, string> = {};
-    let fileData: Buffer | undefined;
-    let filename = '';
-    let mimetype = '';
+    const files: { buffer: Buffer; filename: string; mimetype: string }[] = [];
 
     bb.on('file', (_name, file, info) => {
-      filename = info.filename;
-      mimetype = info.mimeType || info.mime || '';
+      const { filename, mimeType } = info;
       const chunks: Buffer[] = [];
       file.on('data', (d: Buffer) => chunks.push(d));
       file.on('end', () => {
-        fileData = Buffer.concat(chunks);
+        files.push({ buffer: Buffer.concat(chunks), filename, mimetype: mimeType });
       });
     });
 
@@ -63,10 +61,7 @@ function parseMultipart(req: any): Promise<{ fields: Record<string, string>; fil
     });
 
     bb.on('error', reject);
-    bb.on('finish', () => {
-      resolve(fileData ? { fields, file: { buffer: fileData, filename, mimetype } } : { fields });
-    });
-
+    bb.on('finish', () => resolve({ fields, files }));
     req.pipe(bb);
   });
 }
@@ -79,29 +74,32 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === 'POST') {
-      const { fields, file } = await parseMultipart(req);
+      const { fields, files } = await parseMultipart(req);
       const category = fields['category'];
       const name = fields['name'];
       const description = fields['description'];
       const link = fields['link'];
 
-      if (!category || !name || !description || !link || !file) {
-        return res.status(400).json({ error: 'All fields are required' });
+      if (!category || !name || !description || !link || !files?.length) {
+        return res.status(400).json({ error: 'All fields and at least one image are required' });
       }
 
       const timestamp = Date.now();
-      const filename = `${timestamp}-${(file.filename || 'upload').replace(/\s+/g, '-')}`;
+      const imageUrls: string[] = [];
 
-      let url: string;
-      try {
-        const result = await put(`products/${filename}`, file.buffer, {
-          access: 'public',
-          contentType: file.mimetype || 'application/octet-stream',
-        });
-        url = result.url;
-      } catch {
-        const base64 = file.buffer.toString('base64');
-        url = `data:${file.mimetype || 'application/octet-stream'};base64,${base64}`;
+      // Upload all images
+      for (const file of files) {
+        try {
+          const filename = `${timestamp}-${(file.filename || 'upload').replace(/\s+/g, '-')}`;
+          const result = await put(`products/${filename}`, file.buffer, {
+            access: 'public',
+            contentType: file.mimetype || 'application/octet-stream',
+          });
+          imageUrls.push(result.url);
+        } catch {
+          const base64 = file.buffer.toString('base64');
+          imageUrls.push(`data:${file.mimetype || 'application/octet-stream'};base64,${base64}`);
+        }
       }
 
       const data = await readProducts();
@@ -111,7 +109,7 @@ export default async function handler(req: any, res: any) {
         name,
         description,
         link,
-        image: url,
+        images: imageUrls, // ✅ array instead of single image
         createdAt: new Date().toISOString(),
       };
 
@@ -131,8 +129,12 @@ export default async function handler(req: any, res: any) {
 
       const product = data.products[index];
       try {
-        if (typeof product.image === 'string' && product.image.includes('vercel-storage.com')) {
-          await del(product.image);
+        // delete all images for that product
+        const imagesToDelete = product.images || [product.image];
+        for (const img of imagesToDelete) {
+          if (typeof img === 'string' && img.includes('vercel-storage.com')) {
+            await del(img);
+          }
         }
       } catch {}
 
@@ -144,6 +146,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Server error', details: (error as any).message });
   }
 }
