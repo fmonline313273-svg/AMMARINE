@@ -238,28 +238,8 @@ const ProductDetail = () => {
     {product?.name || "Unnamed Product"}
   </h1>
 
-  {/* Part Number */}
-  <div className="space-y-2 mb-6">
-    <p className="text-lg">
-      <span className="text-muted-foreground">Part Number:</span>{" "}
-      <span className="font-semibold text-foreground">
-        {product?.partNumber && product.partNumber.trim() !== ""
-          ? product.partNumber
-          : "Not available"}
-      </span>
-    </p>
-  </div>
-
-  {/* Description */}
-  <div className="mb-8">
-    <h2 className="text-xl font-bold mb-3 text-foreground">Description</h2>
-    <p className="text-muted-foreground leading-relaxed">
-      {product?.description && product.description.trim() !== ""
-        ? product.description
-        : "No description available."}
-    </p>
-  </div>
-</div>
+  <div className="mb-8"> <h2 className="text-xl font-bold mb-3 text-foreground">Product Description :</h2> <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p> 
+ </div>
               <div className="space-y-4">
                 <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                   <Link to="/contact">Request a Quote for this Product</Link>
