@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 // In production, store these securely in environment variables
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123'
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || ''
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || ''
 
 export async function POST(request: NextRequest) {
   try {
