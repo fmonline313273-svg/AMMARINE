@@ -12,6 +12,8 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -46,6 +48,32 @@ const ProductDetail = () => {
     // Reset selected image when product or images change
     setSelectedIndex(0);
   }, [product]);
+
+  useEffect(() => {
+    // detect admin
+    try {
+      const token = localStorage.getItem("adminToken");
+      setIsAdmin(!!token);
+    } catch {}
+  }, []);
+
+  const handleRemoveImage = async (idx: number) => {
+    if (!product || !id) return;
+    const keep = images.filter((_, i) => i !== idx);
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('id', id);
+      fd.append('keepImages', JSON.stringify(keep));
+      const res = await fetch('/api/admin/products', { method: 'PUT', body: fd });
+      if (res.ok) {
+        const data = await res.json();
+        setProduct(data.product);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const categoryFromId = useMemo(() => {
     if (!id) return "automation";
@@ -93,21 +121,34 @@ const ProductDetail = () => {
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {images.map((img: string, idx: number) => (
-                  <button
-                    type="button"
-                    key={idx}
-                    onClick={() => setSelectedIndex(idx)}
-                    className={`aspect-square rounded-lg overflow-hidden cursor-pointer border ${
-                      selectedIndex === idx ? 'ring-2 ring-primary' : 'hover:ring-2 ring-primary/50'
-                    }`}
-                    aria-label={`Show image ${idx + 1}`}
-                  >
-                    <img
-                      src={img}
-                      alt={`${product.name} thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
+                  <div key={idx} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIndex(idx)}
+                      className={`w-full aspect-square rounded-lg overflow-hidden cursor-pointer border ${
+                        selectedIndex === idx ? 'ring-2 ring-primary' : 'hover:ring-2 ring-primary/50'
+                      }`}
+                      aria-label={`Show image ${idx + 1}`}
+                    >
+                      <img
+                        src={img}
+                        alt={`${product?.name || 'Product'} thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="absolute top-1 right-1 text-[11px] px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                        disabled={saving}
+                        aria-label="Remove image"
+                        title="Remove image"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
