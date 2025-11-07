@@ -236,11 +236,10 @@ const ProductDetail = () => {
               <h1 className="text-4xl font-bold mb-4 text-foreground">{product.name}</h1>
               <div className="space-y-2 mb-6">
                 <p className="text-lg">
-                  <h2 className="text-xl font-bold mb-3 text-foreground">Part Number: </h2>
-                <p className="text-muted-foreground leading-relaxed">{product.Part Number || 'No Part Number available.'}</p>
+                  <h2 className="text-xl font-bold mb-3 text-foreground">Part Number</h2>
+                <p className="text-muted-foreground leading-relaxed">{product.PartNumber || 'No PartNumber available.'}</p>
                 </p>
               </div>
-
               <div className="mb-8">
                 <h2 className="text-xl font-bold mb-3 text-foreground">Description</h2>
                 <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p>
