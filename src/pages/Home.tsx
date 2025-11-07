@@ -74,6 +74,43 @@ const Home = () => {
         </div>
       </section>
 
+       {/* Main Call-to-Action */}
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-foreground">
+            Recently Added Products
+          </h2>
+          <p className="text-center text-muted-foreground mb-8 max-w-2xl mx-auto">
+            The latest additions to our catalog
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {loading && (
+              <div className="col-span-full text-center text-muted-foreground">Loading...</div>
+            )}
+            {error && (
+              <div className="col-span-full text-center text-muted-foreground">{error}</div>
+            )}
+            {!loading && !error && recentProducts.map((product) => (
+              <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground">{product.name}</h3>
+                  <Button asChild className="w-full mt-3 bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Link to={`/product/${product.id}`}>View Details</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+      
       {/* Product Categories Section */}
       <section className="py-16 bg-secondary">
         <div className="container mx-auto px-4">
