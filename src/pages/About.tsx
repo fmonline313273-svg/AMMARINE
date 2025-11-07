@@ -14,7 +14,7 @@ const About = () => {
             About AM Marine & Automation
           </h1>
           <p className="text-xl text-center text-primary-foreground/90 max-w-3xl mx-auto">
-            Your trusted B2B partner for marine and industrial automation solutions
+            Your trusted B2B partner for marine and industrial automation Equipment
           </p>
         </div>
       </section>
