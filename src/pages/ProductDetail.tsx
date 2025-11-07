@@ -3,7 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const ProductDetail = () => {
@@ -14,6 +14,7 @@ const ProductDetail = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -48,6 +49,23 @@ const ProductDetail = () => {
     // Reset selected image when product or images change
     setSelectedIndex(0);
   }, [product]);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false);
+      if (e.key === 'ArrowRight') setSelectedIndex((i) => (i + 1) % images.length);
+      if (e.key === 'ArrowLeft') setSelectedIndex((i) => (i - 1 + images.length) % images.length);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lightboxOpen, images.length]);
+
+  const openLightboxAt = (idx: number) => {
+    setSelectedIndex(idx);
+    setLightboxOpen(true);
+  };
 
   useEffect(() => {
     // detect admin
@@ -100,6 +118,54 @@ const ProductDetail = () => {
         </div>
       </section>
 
+      {/* Lightbox Overlay */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <div className="absolute top-4 right-4">
+            <button
+              type="button"
+              className="text-white/80 hover:text-white"
+              onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
+              aria-label="Close"
+            >
+              <X className="h-7 w-7" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="absolute left-3 md:left-6 text-white/80 hover:text-white"
+            onClick={(e) => { e.stopPropagation(); setSelectedIndex((i) => (i - 1 + images.length) % images.length); }}
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="h-8 w-8" />
+          </button>
+
+          <img
+            src={images[selectedIndex]}
+            alt={product?.name || 'Product image'}
+            className="max-h-[85vh] max-w-[90vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <button
+            type="button"
+            className="absolute right-3 md:right-6 text-white/80 hover:text-white"
+            onClick={(e) => { e.stopPropagation(); setSelectedIndex((i) => (i + 1) % images.length); }}
+            aria-label="Next image"
+          >
+            <ChevronRight className="h-8 w-8" />
+          </button>
+
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm">
+            {images.length > 0 ? `${selectedIndex + 1} / ${images.length}` : ''}
+          </div>
+        </div>
+      )}
+
       {/* Main Product Content */}
       <section className="py-12 flex-grow">
         <div className="container mx-auto px-4">
@@ -112,13 +178,18 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
             {/* Left Column - Images */}
             <div>
-              <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
+              <button
+                type="button"
+                className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center overflow-hidden"
+                onClick={() => openLightboxAt(selectedIndex)}
+                aria-label="Open image in fullscreen"
+              >
                 <img
                   src={images[selectedIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
-              </div>
+              </button>
               <div className="grid grid-cols-4 gap-2">
                 {images.map((img: string, idx: number) => (
                   <div key={idx} className="relative">
@@ -136,6 +207,13 @@ const ProductDetail = () => {
                         className="w-full h-full object-cover"
                       />
                     </button>
+                    <button
+                      type="button"
+                      className="absolute inset-0"
+                      onClick={() => openLightboxAt(idx)}
+                      aria-label="Open fullscreen"
+                      title="Open fullscreen"
+                    />
                     {isAdmin && (
                       <button
                         type="button"
