@@ -2,13 +2,37 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const lastYRef = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      const goingDown = y > lastYRef.current;
+
+      if (mobileMenuOpen) {
+        setIsHidden(false);
+      } else if (y < 80) {
+        setIsHidden(false);
+      } else if (goingDown) {
+        setIsHidden(true);
+      } else {
+        setIsHidden(false);
+      }
+
+      lastYRef.current = y;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileMenuOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 bg-background border-b border-border">
+    <nav className={`sticky top-0 z-50 bg-background border-b border-border transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
