@@ -264,12 +264,12 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Product Name</Label>
+                  <Label htmlFor="name">Brand Name</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Enter product name"
+                    placeholder="Enter Brand Name"
                     required
                   />
                 </div>
