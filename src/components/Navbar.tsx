@@ -35,8 +35,10 @@ const Navbar = () => {
     <nav className={`sticky top-0 z-50 bg-background border-b border-border transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"}`}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-         {/* Logo */} <Link to="/" className="flex items-center space-x-2"> <div className="text-2xl font-bold"> <span className="text-accent">A</span> <span className="text-primary">M</span> <span className="text-foreground"> Marine</span> </div> </Link>
-
+         {/* Logo */} 
+          <Link to="/" className="flex items-center space-x-2">
+            <img src="/logo.png" alt="A M Marine Logo" className="h-20 w-auto"/>
+          </Link>
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground hover:text-primary transition-colors">
