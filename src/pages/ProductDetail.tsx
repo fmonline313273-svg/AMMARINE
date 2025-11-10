@@ -234,13 +234,13 @@ const ProductDetail = () => {
             {/* Right Column - Product Info */}
            <div>
   {/* Product Name */}
-  <h1 className="text-4xl font-bold mb-4 text-foreground">
+  <h1 className="text-2xl font-bold mb-4 text-foreground">
     {product?.name || "Unnamed Product"}
   </h1>
-  <h2 className="text-2xl font-bold mb-3 text-foreground">Part Number :</h2>
+  <h2 className="text-4xl font-bold mb-4 text-foreground">Part Number :</h2>
   <p className="text-muted-foreground">{product?.partNumber || 'No part number available.'}</p>
 
-  <div className="mb-8"> <h2 className="text-2xl font-bold mb-3 text-foreground">Product Description :</h2> <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p> 
+  <div className="mb-8"> <h2 className="text-4xl font-bold mb-4 text-foreground">Product Description :</h2> <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p> 
  </div>
               <div className="space-y-4">
                 <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
