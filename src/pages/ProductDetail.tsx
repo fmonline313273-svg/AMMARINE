@@ -238,7 +238,7 @@ const ProductDetail = () => {
     {product?.name || "Unnamed Product"}
   </h1>
   <h2 className="text-4xl font-bold mb-4 text-foreground">Part Number :</h2>
-  <p className="text-muted-foreground">{product?.partNumber || 'No part number available.'}</p>
+  <p className="text-4xl font-bold mb-4">{product?.partNumber || 'No part number available.'}</p>
 
   <div className="mb-8"> <h2 className="text-4xl font-bold mb-4 text-foreground">Product Description :</h2> <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p> 
  </div>
