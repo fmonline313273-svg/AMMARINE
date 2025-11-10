@@ -241,7 +241,7 @@ const ProductDetail = () => {
   <p className="text-4xl font-bold mb-4">{product?.partNumber || 'No part number available.'}</p>
 
   <div className="mb-8"> <h2 className="text-xl font-bold mb-4 text-foreground">Product Description :</h2> 
-    <p className="text-4xl font-bold leading-relaxed text-foreground"> {product.description || 'No description available.'}</p> 
+    <p className="text-2xl font-bold leading-relaxed text-foreground"> {product.description || 'No description available.'}</p> 
  </div>
               <div className="space-y-4">
                 <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
