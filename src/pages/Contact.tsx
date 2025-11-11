@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 const Contact = () => {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: "",
     companyName: "",
@@ -19,6 +21,27 @@ const Contact = () => {
     inquiryType: "",
     message: ""
   });
+
+  useEffect(() => {
+    const from = searchParams.get("from");
+    const productName = searchParams.get("productName") || "";
+    const partNumber = searchParams.get("partNumber") || "";
+    if (from === "product" && (productName || partNumber)) {
+      const defaultMsgLines = [
+        "Hello,",
+        "I would like to request a quote for the following product:",
+        productName ? `Product: ${productName}` : undefined,
+        partNumber ? `Part Number: ${partNumber}` : undefined,
+        "",
+        "Please share pricing and availability.",
+      ].filter(Boolean) as string[];
+      setFormData((prev) => ({
+        ...prev,
+        inquiryType: prev.inquiryType || "Sales & Quote Request",
+        message: prev.message || defaultMsgLines.join("\n"),
+      }));
+    }
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -234,18 +234,19 @@ const ProductDetail = () => {
             {/* Right Column - Product Info */}
            <div>
   {/* Product Name */}
-  <h1 className="text-xl font-bold mb-4 text-foreground">
+  <h1 className="text-4xl font-bold mb-4 text-foreground">
     {product?.name || "Unnamed Product"}
   </h1>
-  <h2 className="text-xl font-bold mb-4 text-foreground">Part Number :</h2>
-  <p className="text-4xl font-bold mb-4">{product?.partNumber || 'No part number available.'}</p>
+  <h2 className="text-xl font-bold mb-3 text-foreground">Part Number :</h2>
+  <p className="text-muted-foreground">{product?.partNumber || 'No part number available.'}</p>
 
-  <div className="mb-8"> <h2 className="text-xl font-bold mb-4 text-foreground">Product Description :</h2> 
-    <p className="text-2xl font-bold leading-relaxed text-foreground"> {product.description || 'No description available.'}</p> 
+  <div className="mb-8"> <h2 className="text-xl font-bold mb-3 text-foreground">Product Description :</h2> <p className="text-muted-foreground leading-relaxed">{product.description || 'No description available.'}</p> 
  </div>
               <div className="space-y-4">
                 <Button asChild size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <Link to="/contact">Request a Quote for this Product</Link>
+                  <Link to={`/contact?from=product&productName=${encodeURIComponent(product?.name || "")}&partNumber=${encodeURIComponent(product?.partNumber || "")}`}>
+                    Request a Quote for this Product
+                  </Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="w-full">
                   <Link to="/contact">Contact Technical Support</Link>
