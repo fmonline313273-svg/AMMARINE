@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, Search } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useEffect, useRef, useState } from "react";
 
@@ -62,9 +62,11 @@ const Navbar = () => {
             <Link to="/about" className="text-foreground hover:text-primary transition-colors">
               About Us
             </Link>
-            <Link to="/contact" className="text-foreground hover:text-primary transition-colors">
-              Contact
-            </Link>
+            <Button asChild variant="ghost" size="icon" aria-label="Search">
+              <Link to="/search">
+                <Search className="h-5 w-5" />
+              </Link>
+            </Button>
             <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
               <Link to="/contact">Request a Quote</Link>
             </Button>
@@ -114,11 +116,11 @@ const Navbar = () => {
               About Us
             </Link>
             <Link
-              to="/contact"
+              to="/search"
               className="block text-foreground hover:text-primary transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Contact
+              Search
             </Link>
             <Button asChild className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
               <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
