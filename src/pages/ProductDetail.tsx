@@ -96,7 +96,7 @@ const ProductDetail = () => {
   const categoryFromId = useMemo(() => {
     if (!id) return "automation";
     const prefix = id.split("-")[0]?.toLowerCase();
-    return prefix === "electronic" ? "electronics" : "automation";
+    return prefix === "electrics" ? "electrics" : "automation";
   }, [id]);
 
   return (
@@ -111,7 +111,7 @@ const ProductDetail = () => {
             <ChevronRight className="h-4 w-4 mx-2" />
             <Link to={`/products/${categoryFromId}`} className="hover:text-primary">Products</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
-            <Link to={`/products/${categoryFromId}`} className="hover:text-primary">{categoryFromId === 'electronics' ? 'Electronics' : 'Automation'}</Link>
+            <Link to={`/products/${categoryFromId}`} className="hover:text-primary">{categoryFromId === 'electrics' ? 'Electrics' : 'Automation'}</Link>
             <ChevronRight className="h-4 w-4 mx-2" />
             <span className="text-foreground">{product?.name || ''}</span>
           </div>
