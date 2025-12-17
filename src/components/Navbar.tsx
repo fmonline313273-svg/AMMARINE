@@ -55,7 +55,7 @@ const Navbar = () => {
                   <Link to="/products/automation">Automation</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/products/electronics">Electronics</Link>
+                  <Link to="/products/electrics">Electrics</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -101,11 +101,11 @@ const Navbar = () => {
                 Automation
               </Link>
               <Link
-                to="/products/electronics"
+                to="/products/electrics"
                 className="block text-foreground hover:text-primary transition-colors pl-3"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Electronics
+                Electrics
               </Link>
             </div>
             <Link
