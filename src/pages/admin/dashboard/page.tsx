@@ -173,7 +173,7 @@ export default function AdminDashboard() {
 
   const categories = [
     { value: "automation", label: "Automation", link: "/products/automation" },
-    { value: "electronic", label: "Electronic", link: "/products/electronic" },
+    { value: "electrics", label: "Electrics", link: "/products/electrics" },
   ]
 
   // Get link based on category
