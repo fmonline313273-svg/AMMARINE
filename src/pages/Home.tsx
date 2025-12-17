@@ -136,17 +136,17 @@ const Home = () => {
             </Card>
 
             <Card className="hover:shadow-xl transition-shadow cursor-pointer">
-              <Link to="/products/electronics">
+              <Link to="/products/electics">
                 <CardContent className="p-8 text-center">
                   <Zap className="h-16 w-16 mx-auto mb-4 text-accent" />
                   <h3 className="text-2xl font-bold mb-4 text-foreground">
-                    Electronics & Switch Gears
+                    Electrics & Switch Gears
                   </h3>
                   <p className="text-muted-foreground mb-4">
                     ACB, MCCB, Contactors, Overload Relays, All Types of Switch Gears
                   </p>
                   <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                    View Electronics Products
+                    View Electrics Products
                   </Button>
                 </CardContent>
               </Link>
