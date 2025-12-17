@@ -40,7 +40,7 @@ const Products = () => {
   const apiCategory = useMemo(() => {
     if (!category) return "automation";
     const c = category.toLowerCase();
-    if (c === "electronics" || c === "electronic") return "electronic";
+    if (c === "electrics" || c === "electrics") return "electrics";
     return "automation";
   }, [category]);
 
@@ -57,7 +57,7 @@ const Products = () => {
       }));
   }, [allProducts, apiCategory]);
 
-  const categoryTitle = apiCategory === "electronic" ? "Electronics & Switch Gears" : "Marine & Industrial Automation";
+  const categoryTitle = apiCategory === "electronic" ? "Electrics & Switch Gears" : "Marine & Industrial Automation";
 
   const manufacturers = Array.from(new Set(products.map(p => p.manufacturer).filter(Boolean)));
   const subcategories = Array.from(new Set(products.map(p => p.subcategory).filter(Boolean)));
